@@ -23,3 +23,9 @@ export const markNotificationRead = async (notificationId) => {
     const response = await api.put(`/member/notifications/${notificationId}/read`);
     return response.data;
 };
+
+// Search member for reference
+export const searchMemberForReference = async (query) => {
+    const response = await api.get(`/members/search/reference?query=${query}`);
+    return response.data;
+};

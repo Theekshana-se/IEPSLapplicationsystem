@@ -168,13 +168,46 @@ export default function LandingPage() {
                             </p>
 
                             <div className="flex flex-wrap gap-4">
-                                <Link
-                                    to="/register"
-                                    className="group px-8 py-4 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-all duration-300 hover:shadow-xl hover:shadow-primary-200 flex items-center gap-2"
-                                >
-                                    Get Started
-                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                </Link>
+                                {(() => {
+                                    const userStr = localStorage.getItem('user');
+                                    let showContinue = false;
+                                    let nextStep = 2;
+
+                                    if (userStr) {
+                                        try {
+                                            const user = JSON.parse(userStr);
+                                            // Check if member and pending
+                                            if (user.userType === 'member' && user.status === 'pending') {
+                                                const currentStep = user.currentStep || 1;
+                                                // If registration complete (8 steps), don't show continue, standard login logic applies
+                                                if (currentStep < 8) {
+                                                    showContinue = true;
+                                                    nextStep = currentStep + 1;
+                                                }
+                                            }
+                                        } catch (e) {
+                                            console.error('Error parsing user', e);
+                                        }
+                                    }
+
+                                    return showContinue ? (
+                                        <Link
+                                            to={`/registration/step${nextStep}`}
+                                            className="group px-8 py-4 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-all duration-300 hover:shadow-xl hover:shadow-primary-200 flex items-center gap-2"
+                                        >
+                                            Continue Registration
+                                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        </Link>
+                                    ) : (
+                                        <Link
+                                            to="/register"
+                                            className="group px-8 py-4 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-all duration-300 hover:shadow-xl hover:shadow-primary-200 flex items-center gap-2"
+                                        >
+                                            Get Started
+                                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        </Link>
+                                    );
+                                })()}
 
                                 <Link
                                     to="/login"

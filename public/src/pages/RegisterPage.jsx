@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Modal from '../components/Modal';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,6 +31,7 @@ export default function RegisterPage() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const {
         register,
@@ -55,10 +57,7 @@ export default function RegisterPage() {
 
             if (response.success) {
                 // Show success message
-                alert('Registration started successfully! Please login to continue.');
-
-                // Redirect to login page
-                navigate('/login');
+                setShowSuccessModal(true);
             } else {
                 setError(response.message || 'Registration failed');
             }
@@ -327,6 +326,24 @@ export default function RegisterPage() {
                     By registering, you agree to IEPSL's terms and conditions
                 </p>
             </div>
+
+            <Modal
+                isOpen={showSuccessModal}
+                title="Registration Successful"
+                type="success"
+                actions={
+                    <button
+                        onClick={() => navigate('/login')}
+                        className="btn btn-primary px-6 w-full"
+                    >
+                        Continue to Login
+                    </button>
+                }
+            >
+                <div>
+                    Your registration process has begun. Please login to complete the remaining steps of your application.
+                </div>
+            </Modal>
         </div>
     );
 }

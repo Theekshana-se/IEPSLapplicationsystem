@@ -61,7 +61,15 @@ export default function RegistrationFlow() {
                             </p>
                         </div>
                         <div className="text-right">
-                            <div className="text-sm text-gray-600">Progress</div>
+                            <div className="flex flex-col items-end gap-1">
+                                <button
+                                    onClick={() => navigate('/')}
+                                    className="text-sm text-error hover:text-error-dark font-medium underline"
+                                >
+                                    Cancel Application
+                                </button>
+                                <div className="text-sm text-gray-600">Progress</div>
+                            </div>
                             <div className="text-2xl font-bold text-primary-600">
                                 {progress?.registrationProgress || 0}%
                             </div>
@@ -99,8 +107,8 @@ export default function RegistrationFlow() {
                                     {/* Step Label */}
                                     <div className="mt-2 text-center hidden md:block">
                                         <div className={`text-xs font-medium ${progress?.currentStep === step.number
-                                                ? 'text-primary-600'
-                                                : 'text-gray-500'
+                                            ? 'text-primary-600'
+                                            : 'text-gray-500'
                                             }`}>
                                             {step.title}
                                         </div>
@@ -110,8 +118,8 @@ export default function RegistrationFlow() {
                                 {/* Connector Line */}
                                 {index < REGISTRATION_STEPS.length - 1 && (
                                     <div className={`flex-1 h-0.5 mx-2 ${progress?.completedSteps?.includes(step.number)
-                                            ? 'bg-primary-600'
-                                            : 'bg-gray-300'
+                                        ? 'bg-primary-600'
+                                        : 'bg-gray-300'
                                         }`} />
                                 )}
                             </React.Fragment>

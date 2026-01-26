@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getPendingRegistrations, approveMember, rejectMember, getMemberDetails } from '../../api/adminApi';
 import { Search, Eye, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { formatDate } from '../../utils/helpers';
+import Modal from '../../components/Modal';
+import Toast from '../../components/Toast';
 
 export default function PendingRegistrations() {
     const [applications, setApplications] = useState([]);
@@ -9,7 +11,11 @@ export default function PendingRegistrations() {
     const [search, setSearch] = useState('');
     const [selectedMember, setSelectedMember] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [rejectMemberId, setRejectMemberId] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
+    const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
     useEffect(() => {
         loadApplications();
@@ -40,34 +46,48 @@ export default function PendingRegistrations() {
         }
     };
 
+    const showNotification = (message, type = 'success') => {
+        setNotification({ show: true, message, type });
+        setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 3000);
+    };
+
     const handleApprove = async (memberId) => {
-        if (!confirm('Are you sure you want to approve this application?')) return;
+        // if (!confirm('Are you sure you want to approve this application?')) return; // Replaced with immediate action for now or could add a confirmation modal later
 
         setActionLoading(true);
         try {
             await approveMember(memberId);
-            alert('Member approved successfully!');
+            showNotification('Member approved successfully!', 'success');
             loadApplications();
             setShowModal(false);
         } catch (error) {
-            alert('Error approving member: ' + error.message);
+            showNotification('Error approving member: ' + error.message, 'error');
         } finally {
             setActionLoading(false);
         }
     };
 
-    const handleReject = async (memberId) => {
-        const reason = prompt('Please enter rejection reason:');
-        if (!reason) return;
+    const initReject = (memberId) => {
+        setRejectMemberId(memberId);
+        setRejectionReason('');
+        setShowRejectModal(true);
+    };
+
+    const confirmReject = async () => {
+        if (!rejectionReason.trim()) {
+            showNotification('Please enter a rejection reason', 'error');
+            return;
+        }
 
         setActionLoading(true);
         try {
-            await rejectMember(memberId, reason);
-            alert('Member rejected successfully!');
+            await rejectMember(rejectMemberId, rejectionReason);
+            showNotification('Member rejected successfully', 'success');
             loadApplications();
             setShowModal(false);
+            setShowRejectModal(false);
         } catch (error) {
-            alert('Error rejecting member: ' + error.message);
+            showNotification('Error rejecting member: ' + error.message, 'error');
         } finally {
             setActionLoading(false);
         }
@@ -158,7 +178,7 @@ export default function PendingRegistrations() {
                                                         <CheckCircle className="w-4 h-4" />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleReject(member._id)}
+                                                        onClick={() => initReject(member._id)}
                                                         className="btn btn-ghost btn-sm text-error"
                                                         disabled={actionLoading}
                                                     >
@@ -176,52 +196,108 @@ export default function PendingRegistrations() {
             </div>
 
             {/* Member Details Modal */}
-            {showModal && selectedMember && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-                            <h3 className="text-2xl font-bold">Application Details</h3>
-                            <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
-                                <XCircle className="w-6 h-6" />
+            <Modal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                title="Application Details"
+                maxWidth="max-w-4xl"
+                actions={
+                    selectedMember && (
+                        <div className="flex gap-4 w-full">
+                            <button
+                                onClick={() => handleApprove(selectedMember._id)}
+                                disabled={actionLoading}
+                                className="btn btn-primary flex-1"
+                            >
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Approve Application
+                            </button>
+                            <button
+                                onClick={() => initReject(selectedMember._id)}
+                                disabled={actionLoading}
+                                className="btn btn-danger flex-1"
+                            >
+                                <XCircle className="w-4 h-4 mr-2" />
+                                Reject Application
                             </button>
                         </div>
-
-                        <div className="p-6 space-y-6">
-                            {/* Personal Details */}
-                            <div>
-                                <h4 className="text-lg font-semibold mb-3">Personal Details</h4>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <div><span className="font-medium">Name:</span> {selectedMember.personalDetails?.fullName}</div>
-                                    <div><span className="font-medium">NIC:</span> {selectedMember.personalDetails?.nicNumber}</div>
-                                    <div><span className="font-medium">Email:</span> {selectedMember.personalDetails?.personalEmail}</div>
-                                    <div><span className="font-medium">Mobile:</span> {selectedMember.personalDetails?.mobileNumber}</div>
-                                    <div><span className="font-medium">District:</span> {selectedMember.personalDetails?.district}</div>
-                                    <div><span className="font-medium">Gender:</span> {selectedMember.personalDetails?.gender}</div>
-                                </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex gap-4 pt-4 border-t">
-                                <button
-                                    onClick={() => handleApprove(selectedMember._id)}
-                                    disabled={actionLoading}
-                                    className="btn btn-primary flex-1"
-                                >
-                                    <CheckCircle className="w-4 h-4 mr-2" />
-                                    Approve Application
-                                </button>
-                                <button
-                                    onClick={() => handleReject(selectedMember._id)}
-                                    disabled={actionLoading}
-                                    className="btn btn-danger flex-1"
-                                >
-                                    <XCircle className="w-4 h-4 mr-2" />
-                                    Reject Application
-                                </button>
+                    )
+                }
+            >
+                {selectedMember && (
+                    <div className="text-left">
+                        {/* Personal Details */}
+                        <div>
+                            <h4 className="text-lg font-semibold mb-3">Personal Details</h4>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div><span className="font-medium">Name:</span> {selectedMember.personalDetails?.fullName}</div>
+                                <div><span className="font-medium">NIC:</span> {selectedMember.personalDetails?.nicNumber}</div>
+                                <div><span className="font-medium">Email:</span> {selectedMember.personalDetails?.personalEmail}</div>
+                                <div><span className="font-medium">Mobile:</span> {selectedMember.personalDetails?.mobileNumber}</div>
+                                <div><span className="font-medium">District:</span> {selectedMember.personalDetails?.district}</div>
+                                <div><span className="font-medium">Gender:</span> {selectedMember.personalDetails?.gender}</div>
                             </div>
                         </div>
                     </div>
+                )}
+            </Modal>
+
+            {/* Rejection Modal */}
+            <Modal
+                isOpen={showRejectModal}
+                onClose={() => setShowRejectModal(false)}
+                title="Reject Application"
+                type="warning"
+                actions={
+                    <>
+                        <button
+                            onClick={() => setShowRejectModal(false)}
+                            className="btn btn-ghost"
+                            disabled={actionLoading}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={confirmReject}
+                            className="btn btn-danger px-6"
+                            disabled={actionLoading}
+                        >
+                            {actionLoading ? (
+                                <span className="flex items-center gap-2">
+                                    <div className="spinner w-4 h-4"></div>
+                                    Rejecting...
+                                </span>
+                            ) : (
+                                'Confirm Rejection'
+                            )}
+                        </button>
+                    </>
+                }
+            >
+                <p className="mb-4 text-sm text-gray-600">
+                    Please provide a reason for rejecting this application. This information will be visible to the applicant.
+                </p>
+                <div className="text-left">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Rejection Reason <span className="text-error">*</span>
+                    </label>
+                    <textarea
+                        value={rejectionReason}
+                        onChange={(e) => setRejectionReason(e.target.value)}
+                        className="input w-full min-h-[100px]"
+                        placeholder="e.g., Missing certified copies of educational certificates..."
+                        autoFocus
+                    />
                 </div>
+            </Modal>
+
+            {/* Notifications */}
+            {notification.show && (
+                <Toast
+                    message={notification.message}
+                    type={notification.type}
+                    onClose={() => setNotification({ ...notification, show: false })}
+                />
             )}
         </div>
     );

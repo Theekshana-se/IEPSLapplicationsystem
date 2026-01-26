@@ -87,6 +87,30 @@ export default function MemberDashboard() {
                 </div>
             </div>
 
+            {/* Rejection Reason */}
+            {
+                profile?.status === 'rejected' && profile?.reviewNotes && (
+                    <div className="card border-l-4 border-error mb-6">
+                        <div className="card-body">
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-error-light text-error rounded-lg">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Application Rejected</h3>
+                                    <div className="text-gray-600 mb-4">
+                                        <span className="font-semibold text-gray-900">Reason:</span> {profile.reviewNotes}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        Please contact the administration for more details or to appeal this decision.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
             {/* Quick Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="card">
@@ -147,30 +171,32 @@ export default function MemberDashboard() {
             </div>
 
             {/* Registration Status */}
-            {profile?.status === 'pending' && (
-                <div className="card">
-                    <div className="card-header">
-                        <h3 className="text-xl font-semibold">Registration Status</h3>
-                    </div>
-                    <div className="card-body">
-                        <div className="bg-warning-light border border-warning rounded-lg p-4 mb-4">
-                            <p className="text-warning-dark">
-                                <strong>Your application is under review.</strong> Our team will review your submission and notify you via email once a decision is made.
-                            </p>
+            {
+                profile?.status === 'pending' && (
+                    <div className="card">
+                        <div className="card-header">
+                            <h3 className="text-xl font-semibold">Registration Status</h3>
                         </div>
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <span className="text-gray-700">Application Submitted</span>
-                                <span className="font-semibold">{formatDate(profile.submittedAt)}</span>
+                        <div className="card-body">
+                            <div className="bg-warning-light border border-warning rounded-lg p-4 mb-4">
+                                <p className="text-warning-dark">
+                                    <strong>Your application is under review.</strong> Our team will review your submission and notify you via email once a decision is made.
+                                </p>
                             </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-gray-700">Completion</span>
-                                <span className="font-semibold">{progress?.registrationProgress}%</span>
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-700">Application Submitted</span>
+                                    <span className="font-semibold">{formatDate(profile.submittedAt)}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-700">Completion</span>
+                                    <span className="font-semibold">{progress?.registrationProgress}%</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Quick Links */}
             <div className="card">
@@ -195,6 +221,6 @@ export default function MemberDashboard() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

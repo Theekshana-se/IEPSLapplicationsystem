@@ -4,7 +4,9 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { saveRegistrationStep } from '../../api/registrationApi';
-import { Plus, Trash2 } from 'lucide-react';
+import { searchMemberForReference } from '../../api/memberApi';
+import { Plus, Trash2, Search, Loader2 } from 'lucide-react';
+import Toast from '../Toast';
 
 const referencesSchema = z.object({
     references: z.array(z.object({
@@ -21,11 +23,13 @@ export default function Step6References({ onComplete }) {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
     const {
         register,
         control,
         handleSubmit,
+        setValue,
         formState: { errors },
     } = useForm({
         resolver: zodResolver(referencesSchema),
@@ -56,6 +60,34 @@ export default function Step6References({ onComplete }) {
             setError(err.message || 'Failed to save. Please try again.');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleSearch = async (index, query) => {
+        if (!query) return;
+
+        try {
+            // Set loading state for specific field if needed, or just use general loading
+            const response = await searchMemberForReference(query);
+            if (response.success && response.data) {
+                const member = response.data;
+                // Auto-fill fields
+                fields[index].name = member.name; // Update field array item directly doesn't trigger re-render properly for inputs
+
+                // Use setValue to update form values
+                const setValueConfig = { shouldValidate: true, shouldDirty: true };
+                setValue(`references.${index}.name`, member.name, setValueConfig);
+                setValue(`references.${index}.email`, member.email, setValueConfig);
+                setValue(`references.${index}.phone`, member.phone, setValueConfig);
+                setValue(`references.${index}.designation`, member.designation || '', setValueConfig);
+                setValue(`references.${index}.organization`, member.organization || '', setValueConfig);
+            }
+        } catch (err) {
+            setToast({
+                show: true,
+                message: 'Member not found or error occurred: ' + (err.response?.data?.message || err.message),
+                type: 'error'
+            });
         }
     };
 
@@ -92,6 +124,35 @@ export default function Step6References({ onComplete }) {
                                             <Trash2 className="w-5 h-5" />
                                         </button>
                                     )}
+                                </div>
+
+                                {/* Member Search */}
+                                <div className="mb-6 p-4 bg-primary-50 rounded-lg border border-primary-100">
+                                    <label className="label text-primary-900 font-medium mb-2">
+                                        Auto-fill from Existing Member
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            id={`search-${index}`}
+                                            className="input flex-1"
+                                            placeholder="Enter Membership ID (e.g., MEM001) or NIC"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const query = document.getElementById(`search-${index}`).value;
+                                                handleSearch(index, query);
+                                            }}
+                                            className="btn btn-primary px-4"
+                                        >
+                                            <Search className="w-4 h-4 mr-2" />
+                                            Search & Fill
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-primary-600 mt-2">
+                                        Note: Search works for approved active members only.
+                                    </p>
                                 </div>
 
                                 <div className="space-y-4">
@@ -222,6 +283,13 @@ export default function Step6References({ onComplete }) {
                     </form>
                 </div>
             </div>
+            {toast.show && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ ...toast, show: false })}
+                />
+            )}
         </div>
     );
 }

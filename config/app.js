@@ -39,6 +39,7 @@ app.use('/uploads', express.static('uploads'));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/registration", require("./routes/registrationRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/members", require("./routes/memberRoutes"));
 
 // Health check route
 app.get('/api/health', (req, res) => {

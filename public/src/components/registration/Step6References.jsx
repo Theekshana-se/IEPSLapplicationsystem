@@ -83,9 +83,18 @@ export default function Step6References({ onComplete }) {
                 setValue(`references.${index}.organization`, member.organization || '', setValueConfig);
             }
         } catch (err) {
+            let errorMessage = 'Member not found or error occurred';
+            if (err.response?.status === 404) {
+                errorMessage = 'Active member not found with that ID or NIC. Please try again or fill manually.';
+            } else if (err.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+
             setToast({
                 show: true,
-                message: 'Member not found or error occurred: ' + (err.response?.data?.message || err.message),
+                message: errorMessage,
                 type: 'error'
             });
         }

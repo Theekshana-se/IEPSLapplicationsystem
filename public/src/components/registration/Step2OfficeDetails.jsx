@@ -139,26 +139,38 @@ export default function Step2OfficeDetails({ onComplete }) {
                         <div className="flex items-center justify-between pt-6 border-t">
                             <button
                                 type="button"
-                                onClick={() => navigate('/login')}
+                                onClick={() => navigate('/registration/step1-summary')}
                                 className="btn btn-secondary"
                             >
-                                Save & Exit
+                                Previous Step
                             </button>
 
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="btn btn-primary px-8"
-                            >
-                                {isLoading ? (
-                                    <span className="flex items-center gap-2">
-                                        <div className="spinner w-4 h-4"></div>
-                                        Saving...
-                                    </span>
-                                ) : (
-                                    'Continue to Step 3'
-                                )}
-                            </button>
+                            <div className="flex gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        onComplete?.();
+                                        navigate('/registration/step3');
+                                    }}
+                                    className="btn btn-outline"
+                                >
+                                    Skip Step
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="btn btn-primary px-8"
+                                >
+                                    {isLoading ? (
+                                        <span className="flex items-center gap-2">
+                                            <div className="spinner w-4 h-4"></div>
+                                            Saving...
+                                        </span>
+                                    ) : (
+                                        'Save & Continue'
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>

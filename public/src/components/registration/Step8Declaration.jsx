@@ -123,7 +123,7 @@ export default function Step8Declaration({ onComplete }) {
                                     <li>I understand that any false or misleading information may result in the rejection of my application or termination of membership.</li>
                                     <li>I agree to abide by the constitution, bylaws, and code of ethics of the Institute of Environmental Professionals Sri Lanka (IEPSL).</li>
                                     <li>I authorize IEPSL to verify the information provided and contact my references.</li>
-                                    <li>I understand that membership is subject to approval by the IEPSL board.</li>
+                                    <li>I understand that membership is subject to approval by the IEPSL Council.</li>
                                     <li>I agree to pay the applicable membership fees as determined by IEPSL.</li>
                                 </ul>
                             </div>

@@ -11,10 +11,12 @@ const workExperienceSchema = z.object({
         placeOfWork: z.string().min(1, 'Place of work is required'),
         designation: z.string().min(1, 'Designation is required'),
         natureOfWork: z.string().min(1, 'Nature of work is required'),
-        startDate: z.string().optional(),
         endDate: z.string().optional(),
         isCurrent: z.boolean().optional()
-    })).min(1, 'At least one work experience is required')
+    })).min(1, 'At least one work experience is required'),
+    environmentalWorkExperience: z.string()
+        .max(3000, 'Must not exceed approximately 500 words')
+        .optional()
 });
 
 export default function Step3WorkExperience({ onComplete }) {
@@ -30,7 +32,8 @@ export default function Step3WorkExperience({ onComplete }) {
     } = useForm({
         resolver: zodResolver(workExperienceSchema),
         defaultValues: {
-            workExperience: [{ placeOfWork: '', designation: '', natureOfWork: '', isCurrent: false }]
+            workExperience: [{ placeOfWork: '', designation: '', natureOfWork: '', isCurrent: false }],
+            environmentalWorkExperience: ''
         }
     });
 
@@ -184,6 +187,28 @@ export default function Step3WorkExperience({ onComplete }) {
                         {errors.workExperience?.root && (
                             <p className="error-message">{errors.workExperience.root.message}</p>
                         )}
+
+                        {/* Environmental Work Experience */}
+                        <div className="pt-6 border-t mt-8">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                                Environmental Related Work & Contributions
+                            </h3>
+                            <div>
+                                <label className="label">
+                                    Environmental related work / research, major contributions and achievements
+                                    <span className="text-gray-500 font-normal ml-1">(Optional, max 500 words)</span>
+                                </label>
+                                <textarea
+                                    {...register('environmentalWorkExperience')}
+                                    className={`input min-h-[120px] ${errors.environmentalWorkExperience ? 'input-error' : ''}`}
+                                    placeholder="Briefly state your environmental related work, research, major contributions, and achievements..."
+                                    rows={5}
+                                />
+                                {errors.environmentalWorkExperience && (
+                                    <p className="error-message">{errors.environmentalWorkExperience.message}</p>
+                                )}
+                            </div>
+                        </div>
 
                         {/* Navigation Buttons */}
                         <div className="flex items-center justify-between pt-6 border-t">

@@ -50,6 +50,10 @@ const memberSchema = new mongoose.Schema({
     endDate: Date,
     isCurrent: { type: Boolean, default: false }
   }],
+  environmentalWorkExperience: {
+    type: String,
+    maxLength: 3000 // Roughly 500 words
+  },
 
   // Educational Qualifications (Step 4)
   education: [{
@@ -142,10 +146,7 @@ const memberSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-memberSchema.index({ 'personalDetails.personalEmail': 1 });
-memberSchema.index({ 'personalDetails.nicNumber': 1 });
 memberSchema.index({ status: 1 });
-memberSchema.index({ membershipId: 1 });
 
 // Virtual for full registration completion
 memberSchema.virtual('isRegistrationComplete').get(function () {

@@ -52,7 +52,7 @@ exports.saveStep2 = async (req, res, next) => {
 // @access  Private (Member)
 exports.saveStep3 = async (req, res, next) => {
     try {
-        const { workExperience } = req.body;
+        const { workExperience, environmentalWorkExperience } = req.body;
 
         const member = await Member.findById(req.user._id);
 
@@ -65,6 +65,7 @@ exports.saveStep3 = async (req, res, next) => {
 
         // Update work experience
         member.workExperience = workExperience;
+        member.environmentalWorkExperience = environmentalWorkExperience;
 
         // Mark step as completed
         member.completeStep(3);

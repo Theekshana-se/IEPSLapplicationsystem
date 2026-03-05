@@ -5,6 +5,7 @@ import { REGISTRATION_STEPS } from '../utils/constants';
 import { CheckCircle2, Circle } from 'lucide-react';
 
 // Import step components
+import Step1Summary from '../components/registration/Step1Summary';
 import Step2OfficeDetails from '../components/registration/Step2OfficeDetails';
 import Step3WorkExperience from '../components/registration/Step3WorkExperience';
 import Step4Education from '../components/registration/Step4Education';
@@ -132,6 +133,7 @@ export default function RegistrationFlow() {
             <div className="container-custom py-8">
                 <Routes>
                     <Route path="/" element={<Navigate to="/registration/step2" replace />} />
+                    <Route path="/step1-summary" element={<Step1Summary onComplete={loadProgress} />} />
                     <Route path="/step2" element={<Step2OfficeDetails onComplete={loadProgress} />} />
                     <Route path="/step3" element={<Step3WorkExperience onComplete={loadProgress} />} />
                     <Route path="/step4" element={<Step4Education onComplete={loadProgress} />} />

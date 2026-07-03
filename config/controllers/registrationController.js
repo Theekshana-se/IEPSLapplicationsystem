@@ -2,6 +2,8 @@ const Member = require('../models/Member');
 const Notification = require('../models/Notification');
 const generateMembershipId = require('../utils/generateMembershipId');
 const { sendApprovalEmail } = require('../utils/emailService');
+const { createStoredFileRecord } = require('../utils/fileStorage');
+const { serializeMember } = require('../utils/serializeMember');
 
 // @desc    Save/Update Step 2 - Office Details
 // @route   POST /api/registration/step2
@@ -219,31 +221,52 @@ exports.saveStep7 = async (req, res, next) => {
         }
 
         // Get uploaded file paths from multer
-        const documents = {};
+        const documents = { ...(member.documents || {}) };
+        const documentDetails = { ...(member.documentDetails || {}) };
 
         if (req.files) {
             if (req.files.profilePhoto && req.files.profilePhoto[0]) {
-                documents.profilePhoto = req.files.profilePhoto[0].path;
+                const profilePhoto = await createStoredFileRecord(req.files.profilePhoto[0]);
+                documents.profilePhoto = profilePhoto.path;
+                documentDetails.profilePhoto = profilePhoto;
             }
             if (req.files.nicCopy && req.files.nicCopy[0]) {
-                documents.nicCopy = req.files.nicCopy[0].path;
+                const nicCopy = await createStoredFileRecord(req.files.nicCopy[0]);
+                documents.nicCopy = nicCopy.path;
+                documentDetails.nicCopy = nicCopy;
             }
             if (req.files.degreeCertificates) {
-                documents.degreeCertificates = req.files.degreeCertificates.map(file => file.path);
+                const degreeCertificates = await Promise.all(req.files.degreeCertificates.map(createStoredFileRecord));
+                documents.degreeCertificates = degreeCertificates.map(file => file.path);
+                documentDetails.degreeCertificates = degreeCertificates;
             }
             if (req.files.cvDocument && req.files.cvDocument[0]) {
-                documents.cvDocument = req.files.cvDocument[0].path;
+                const cvDocument = await createStoredFileRecord(req.files.cvDocument[0]);
+                documents.cvDocument = cvDocument.path;
+                documentDetails.cvDocument = cvDocument;
             }
         }
 
         // Update documents
-        member.documents = { ...member.documents, ...documents };
+        member.documents = documents;
+        member.documentDetails = documentDetails;
 
         // Mark step as completed
         member.completeStep(7);
         member.currentStep = Math.max(member.currentStep, 8);
 
         await member.save();
+
+        await Notification.create({
+            recipientType: 'admin',
+            type: 'document_uploaded',
+            title: 'Member Documents Uploaded',
+            message: `${member.personalDetails.nameWithInitials} uploaded or updated verification documents.`,
+            metadata: {
+                memberId: member._id,
+                memberName: member.personalDetails.nameWithInitials
+            }
+        });
 
         res.status(200).json({
             success: true,
@@ -252,7 +275,8 @@ exports.saveStep7 = async (req, res, next) => {
                 currentStep: member.currentStep,
                 registrationProgress: member.registrationProgress,
                 completedSteps: member.completedSteps,
-                uploadedDocuments: documents
+                uploadedDocuments: documents,
+                documentDetails
             }
         });
     } catch (error) {
@@ -352,7 +376,8 @@ exports.getProgress = async (req, res, next) => {
                 education: member.education,
                 certifications: member.certifications,
                 references: member.references,
-                documents: member.documents,
+                documents: serializeMember(member).documents,
+                documentDetails: serializeMember(member).documentDetails,
                 declaration: member.declaration
             }
         });

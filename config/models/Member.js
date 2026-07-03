@@ -1,5 +1,19 @@
 const mongoose = require('mongoose');
 
+const storedFileSchema = new mongoose.Schema({
+  path: String,
+  originalName: String,
+  mimeType: String,
+  size: Number,
+  bytes: Number,
+  provider: String,
+  publicId: String,
+  assetId: String,
+  resourceType: String,
+  format: String,
+  uploadedAt: Date
+}, { _id: false });
+
 const memberSchema = new mongoose.Schema({
   membershipId: {
     type: String,
@@ -90,6 +104,12 @@ const memberSchema = new mongoose.Schema({
     degreeCertificates: [String],
     cvDocument: String
   },
+  documentDetails: {
+    profilePhoto: storedFileSchema,
+    nicCopy: storedFileSchema,
+    degreeCertificates: [storedFileSchema],
+    cvDocument: storedFileSchema
+  },
 
   // Declaration (Step 8)
   declaration: {
@@ -138,6 +158,19 @@ const memberSchema = new mongoose.Schema({
   },
   reviewedAt: Date,
   reviewNotes: String,
+
+  // Legacy spreadsheet imports that do not map cleanly to the current flow
+  legacyImport: {
+    sourceFile: String,
+    sourceSheet: String,
+    rowNumber: Number,
+    importedAt: Date,
+    originalMembershipNo: String,
+    previousMembershipNo: String,
+    originalPersonalEmail: String,
+    paymentHistory: mongoose.Schema.Types.Mixed,
+    rawRow: mongoose.Schema.Types.Mixed
+  },
 
   // Timestamps
   lastLogin: Date

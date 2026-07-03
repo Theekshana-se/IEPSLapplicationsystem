@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getRegistrationProgress } from '../../api/registrationApi';
 import { User, Briefcase, GraduationCap, Award, Users as UsersIcon, FileText, CheckCircle } from 'lucide-react';
+import DocumentPanel from '../../components/documents/DocumentPanel';
 
 export default function RegistrationDetails() {
     const [data, setData] = useState(null);
@@ -229,41 +230,11 @@ export default function RegistrationDetails() {
 
             {/* Documents */}
             {data?.documents && (
-                <div className="card">
-                    <div className="card-header flex items-center gap-2">
-                        <FileText className="w-5 h-5" />
-                        <h3 className="text-xl font-semibold">Uploaded Documents</h3>
-                        {data?.completedSteps?.includes(7) && <CheckCircle className="w-5 h-5 text-success ml-auto" />}
-                    </div>
-                    <div className="card-body">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {data.documents.profilePhoto && (
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle className="w-4 h-4 text-success" />
-                                    <span>Profile Photo</span>
-                                </div>
-                            )}
-                            {data.documents.nicCopy && (
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle className="w-4 h-4 text-success" />
-                                    <span>NIC Copy</span>
-                                </div>
-                            )}
-                            {data.documents.cvDocument && (
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle className="w-4 h-4 text-success" />
-                                    <span>CV/Resume</span>
-                                </div>
-                            )}
-                            {data.documents.degreeCertificates && data.documents.degreeCertificates.length > 0 && (
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle className="w-4 h-4 text-success" />
-                                    <span>Degree Certificates ({data.documents.degreeCertificates.length})</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <DocumentPanel
+                    documents={data.documents}
+                    documentDetails={data.documentDetails}
+                    title="Uploaded Documents"
+                />
             )}
         </div>
     );

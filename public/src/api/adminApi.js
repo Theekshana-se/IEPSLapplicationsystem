@@ -34,8 +34,49 @@ export const rejectMember = async (memberId, reason) => {
     return response.data;
 };
 
+export const sendMemberActivation = async (memberId) => {
+    const response = await api.post(`/admin/member/${memberId}/send-activation`);
+    return response.data;
+};
+
+export const sendImportedMemberActivations = async () => {
+    const response = await api.post('/admin/members/send-activation-links');
+    return response.data;
+};
+
 // Get dashboard statistics
 export const getStatistics = async () => {
     const response = await api.get('/admin/statistics');
+    return response.data;
+};
+
+export const getPaymentSummary = async (year = '') => {
+    const response = await api.get('/admin/payments/summary', {
+        params: { year }
+    });
+    return response.data;
+};
+
+export const getPayments = async (params = {}) => {
+    const response = await api.get('/admin/payments', { params });
+    return response.data;
+};
+
+export const recordPayment = async (formData) => {
+    const response = await api.post('/admin/payments', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+};
+
+export const verifyPayment = async (paymentId, data) => {
+    const response = await api.patch(`/admin/payments/${paymentId}/verify`, data);
+    return response.data;
+};
+
+export const sendRenewalReminders = async (year) => {
+    const response = await api.post('/admin/payments/send-renewal-reminders', { year });
     return response.data;
 };

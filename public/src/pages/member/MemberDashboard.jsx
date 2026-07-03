@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { getMemberProfile } from '../../api/memberApi';
+import { getMemberProfile, getMemberPayments, getNotifications } from '../../api/memberApi';
 import { getRegistrationProgress } from '../../api/registrationApi';
-import { User, Mail, Phone, MapPin, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import { formatDate, getStatusColor } from '../../utils/helpers';
+import { User, Mail, Phone, MapPin, CheckCircle, Clock, AlertCircle, CreditCard } from 'lucide-react';
+import { formatDate, formatPaymentStatus } from '../../utils/helpers';
 
 export default function MemberDashboard() {
     const [profile, setProfile] = useState(null);
     const [progress, setProgress] = useState(null);
+    const [payments, setPayments] = useState(null);
+    const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -15,13 +17,17 @@ export default function MemberDashboard() {
 
     const loadData = async () => {
         try {
-            const [profileRes, progressRes] = await Promise.all([
+            const [profileRes, progressRes, paymentRes, notificationRes] = await Promise.all([
                 getMemberProfile(),
-                getRegistrationProgress()
+                getRegistrationProgress(),
+                getMemberPayments(),
+                getNotifications()
             ]);
 
             if (profileRes.success) setProfile(profileRes.data.user);
             if (progressRes.success) setProgress(progressRes.data);
+            if (paymentRes.success) setPayments(paymentRes.data);
+            if (notificationRes.success) setNotifications(notificationRes.data);
         } catch (error) {
             console.error('Error loading data:', error);
         } finally {
@@ -112,7 +118,7 @@ export default function MemberDashboard() {
             }
 
             {/* Quick Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <div className="card">
                     <div className="card-body">
                         <div className="flex items-center gap-3">
@@ -164,6 +170,25 @@ export default function MemberDashboard() {
                             <div>
                                 <p className="text-sm text-gray-600">District</p>
                                 <p className="font-semibold">{profile?.personalDetails?.district || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="card">
+                    <div className="card-body">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-primary-100 text-primary-600 rounded-lg">
+                                <CreditCard className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Annual Renewal</p>
+                                <p className="font-semibold">
+                                    {payments?.summary ? formatPaymentStatus(payments.summary.currentYearStatus) : 'N/A'}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {notifications.filter((item) => !item.isRead).length} unread notifications
+                                </p>
                             </div>
                         </div>
                     </div>

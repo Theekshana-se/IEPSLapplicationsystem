@@ -20,6 +20,8 @@ const paymentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    paymentYear: Number,
+    dueDate: Date,
     currency: {
         type: String,
         default: 'LKR'
@@ -39,14 +41,38 @@ const paymentSchema = new mongoose.Schema({
     transactionId: String,
     receiptNumber: String,
     paymentProof: String, // File path to uploaded proof
+    paymentProofDetails: {
+        path: String,
+        originalName: String,
+        mimeType: String,
+        size: Number,
+        bytes: Number,
+        provider: String,
+        publicId: String,
+        assetId: String,
+        resourceType: String,
+        format: String,
+        uploadedAt: Date
+    },
 
     paidAt: Date,
+    recordedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Admin'
+    },
     verifiedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin'
     },
     verifiedAt: Date,
-    verificationNotes: String
+    verificationNotes: String,
+    reminderSentAt: Date,
+    reminderSentBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Admin'
+    },
+    notes: String,
+    metadata: mongoose.Schema.Types.Mixed
 }, {
     timestamps: true
 });
@@ -55,6 +81,7 @@ const paymentSchema = new mongoose.Schema({
 paymentSchema.index({ memberId: 1 });
 paymentSchema.index({ membershipId: 1 });
 paymentSchema.index({ paymentStatus: 1 });
+paymentSchema.index({ paymentYear: 1 });
 paymentSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Payment', paymentSchema);

@@ -4,6 +4,7 @@ import { Search, Eye, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { formatDate } from '../../utils/helpers';
 import Modal from '../../components/Modal';
 import Toast from '../../components/Toast';
+import DocumentPanel from '../../components/documents/DocumentPanel';
 
 export default function PendingRegistrations() {
     const [applications, setApplications] = useState([]);
@@ -225,7 +226,7 @@ export default function PendingRegistrations() {
                 }
             >
                 {selectedMember && (
-                    <div className="text-left">
+                    <div className="text-left space-y-6">
                         {/* Personal Details */}
                         <div>
                             <h4 className="text-lg font-semibold mb-3">Personal Details</h4>
@@ -238,6 +239,12 @@ export default function PendingRegistrations() {
                                 <div><span className="font-medium">Gender:</span> {selectedMember.personalDetails?.gender}</div>
                             </div>
                         </div>
+
+                        <DocumentPanel
+                            documents={selectedMember.documents}
+                            documentDetails={selectedMember.documentDetails}
+                            title="Submitted Documents"
+                        />
                     </div>
                 )}
             </Modal>

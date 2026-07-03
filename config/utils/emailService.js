@@ -2,10 +2,14 @@ const nodemailer = require('nodemailer');
 
 // Create reusable transporter
 const createTransporter = () => {
-    return nodemailer.createTransporter({
+    if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+        throw new Error('Email service is not configured. Set EMAIL_HOST, EMAIL_USER, and EMAIL_PASSWORD.');
+    }
+
+    return nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
         port: process.env.EMAIL_PORT,
-        secure: false, // true for 465, false for other ports
+        secure: String(process.env.EMAIL_PORT) === '465',
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASSWORD
@@ -102,6 +106,69 @@ const emailTemplates = {
         <p>Best regards,<br>IEPSL Team</p>
       </div>
     `
+    }),
+
+    paymentVerified: (memberName, amount, paymentYear) => ({
+        subject: 'IEPSL Payment Verified',
+        html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #10b981;">Payment Verified</h2>
+        <p>Dear ${memberName},</p>
+        <p>Your payment of <strong>LKR ${amount}</strong> has been verified successfully.</p>
+        ${paymentYear ? `<p><strong>Membership year:</strong> ${paymentYear}</p>` : ''}
+        <p>Thank you for keeping your membership in good standing.</p>
+        <br>
+        <p>Best regards,<br>IEPSL Team</p>
+      </div>
+    `
+    }),
+
+    renewalReminder: (memberName, year) => ({
+        subject: `IEPSL Annual Membership Renewal Reminder for ${year}`,
+        html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #f59e0b;">Membership Renewal Reminder</h2>
+        <p>Dear ${memberName},</p>
+        <p>This is a reminder that your IEPSL annual membership payment for <strong>${year}</strong> is still pending.</p>
+        <p>Please complete the renewal payment and share your payment proof with the IEPSL administration team.</p>
+        <br>
+        <p>Best regards,<br>IEPSL Team</p>
+      </div>
+    `
+    }),
+
+    accountActivation: (memberName, activationUrl) => ({
+        subject: 'Activate Your IEPSL Member Account',
+        html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #008080;">Activate Your IEPSL Account</h2>
+        <p>Dear ${memberName},</p>
+        <p>Your IEPSL member account is ready. Please set your password using the secure link below.</p>
+        <p><a href="${activationUrl}" style="display: inline-block; background: #008080; color: #ffffff; padding: 12px 18px; text-decoration: none; border-radius: 6px;">Set Password</a></p>
+        <p>This link will expire in 24 hours.</p>
+        <p>If the button does not work, open this link in your browser:</p>
+        <p style="word-break: break-all;">${activationUrl}</p>
+        <br>
+        <p>Best regards,<br>IEPSL Team</p>
+      </div>
+    `
+    }),
+
+    passwordReset: (memberName, resetUrl) => ({
+        subject: 'Reset Your IEPSL Password',
+        html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #008080;">Reset Your IEPSL Password</h2>
+        <p>Dear ${memberName},</p>
+        <p>We received a request to reset your IEPSL account password.</p>
+        <p><a href="${resetUrl}" style="display: inline-block; background: #008080; color: #ffffff; padding: 12px 18px; text-decoration: none; border-radius: 6px;">Reset Password</a></p>
+        <p>This link will expire in 24 hours. If you did not request this, you can ignore this email.</p>
+        <p>If the button does not work, open this link in your browser:</p>
+        <p style="word-break: break-all;">${resetUrl}</p>
+        <br>
+        <p>Best regards,<br>IEPSL Team</p>
+      </div>
+    `
     })
 };
 
@@ -123,6 +190,26 @@ exports.sendRejectionEmail = async (to, memberName, reason) => {
 
 exports.sendPaymentReceivedEmail = async (to, memberName, amount, receiptNumber) => {
     const template = emailTemplates.paymentReceived(memberName, amount, receiptNumber);
+    return await sendEmail({ to, ...template });
+};
+
+exports.sendPaymentVerifiedEmail = async (to, memberName, amount, paymentYear) => {
+    const template = emailTemplates.paymentVerified(memberName, amount, paymentYear);
+    return await sendEmail({ to, ...template });
+};
+
+exports.sendRenewalReminderEmail = async (to, memberName, year) => {
+    const template = emailTemplates.renewalReminder(memberName, year);
+    return await sendEmail({ to, ...template });
+};
+
+exports.sendAccountActivationEmail = async (to, memberName, activationUrl) => {
+    const template = emailTemplates.accountActivation(memberName, activationUrl);
+    return await sendEmail({ to, ...template });
+};
+
+exports.sendPasswordResetEmail = async (to, memberName, resetUrl) => {
+    const template = emailTemplates.passwordReset(memberName, resetUrl);
     return await sendEmail({ to, ...template });
 };
 

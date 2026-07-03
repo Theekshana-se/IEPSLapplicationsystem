@@ -1,8 +1,28 @@
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const Member = require('../models/Member');
 const Admin = require('../models/Admin');
 const { generateToken } = require('../middleware/authMiddleware');
-const { sendWelcomeEmail } = require('../utils/emailService');
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/emailService');
+const { serializeMember } = require('../utils/serializeMember');
+
+const RESET_TOKEN_EXPIRES_MS = 24 * 60 * 60 * 1000;
+
+function hashResetToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function buildPasswordResetUrl(token) {
+    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+    return `${frontendUrl}/activate/${token}`;
+}
+
+function createPasswordResetToken(member) {
+    const token = crypto.randomBytes(32).toString('hex');
+    member.passwordResetToken = hashResetToken(token);
+    member.passwordResetExpires = new Date(Date.now() + RESET_TOKEN_EXPIRES_MS);
+    return token;
+}
 
 // @desc    Register new member (Step 1 - Initial registration)
 // @route   POST /api/auth/register
@@ -190,6 +210,140 @@ exports.login = async (req, res, next) => {
     }
 };
 
+// @desc    Request password reset for a member account
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = async (req, res, next) => {
+    try {
+        const email = String(req.body.email || '').trim().toLowerCase();
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide your email address'
+            });
+        }
+
+        const member = await Member.findOne({
+            'personalDetails.personalEmail': email
+        });
+
+        // Avoid exposing whether an email exists in the system.
+        if (!member || email.endsWith('@iepsl.local')) {
+            return res.status(200).json({
+                success: true,
+                message: 'If this email exists, a password reset link will be sent.'
+            });
+        }
+
+        const token = createPasswordResetToken(member);
+        await member.save();
+
+        const resetUrl = buildPasswordResetUrl(token);
+        await sendPasswordResetEmail(
+            member.personalDetails.personalEmail,
+            member.personalDetails.nameWithInitials || member.personalDetails.fullName,
+            resetUrl
+        );
+
+        res.status(200).json({
+            success: true,
+            message: 'If this email exists, a password reset link will be sent.'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Validate an activation/reset token
+// @route   GET /api/auth/reset-password/:token
+// @access  Public
+exports.validatePasswordResetToken = async (req, res, next) => {
+    try {
+        const member = await Member.findOne({
+            passwordResetToken: hashResetToken(req.params.token),
+            passwordResetExpires: { $gt: new Date() }
+        });
+
+        if (!member) {
+            return res.status(400).json({
+                success: false,
+                message: 'This password setup link is invalid or has expired.'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                member: {
+                    name: member.personalDetails.nameWithInitials || member.personalDetails.fullName,
+                    email: member.personalDetails.personalEmail,
+                    membershipId: member.membershipId
+                }
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Set member password using activation/reset token
+// @route   POST /api/auth/reset-password/:token
+// @access  Public
+exports.resetPassword = async (req, res, next) => {
+    try {
+        const { password } = req.body;
+
+        if (!password || password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password must be at least 6 characters.'
+            });
+        }
+
+        const member = await Member.findOne({
+            passwordResetToken: hashResetToken(req.params.token),
+            passwordResetExpires: { $gt: new Date() }
+        }).select('+password');
+
+        if (!member) {
+            return res.status(400).json({
+                success: false,
+                message: 'This password setup link is invalid or has expired.'
+            });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        member.password = await bcrypt.hash(password, salt);
+        member.passwordResetToken = undefined;
+        member.passwordResetExpires = undefined;
+        member.isEmailVerified = true;
+        await member.save();
+
+        const token = generateToken(member._id, 'member');
+
+        res.status(200).json({
+            success: true,
+            message: 'Password set successfully',
+            data: {
+                token,
+                user: {
+                    id: member._id,
+                    email: member.personalDetails.personalEmail,
+                    userType: 'member',
+                    nameWithInitials: member.personalDetails.nameWithInitials,
+                    status: member.status,
+                    membershipId: member.membershipId,
+                    currentStep: member.currentStep,
+                    registrationProgress: member.registrationProgress
+                }
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
 // @access  Private
@@ -206,7 +360,7 @@ exports.getMe = async (req, res, next) => {
         res.status(200).json({
             success: true,
             data: {
-                user,
+                user: req.userType === 'member' ? serializeMember(user) : user,
                 userType: req.userType
             }
         });

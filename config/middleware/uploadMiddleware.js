@@ -1,55 +1,38 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const {
+    getDestinationForField,
+    buildStoredFilename
+} = require('../utils/fileStorage');
 
-// Ensure upload directory exists
-const uploadDir = './uploads';
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Configure storage
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        let folder = 'documents';
-
-        // Organize by file type
-        if (file.fieldname === 'profilePhoto') {
-            folder = 'photos';
-        } else if (file.fieldname === 'paymentProof') {
-            folder = 'payments';
-        }
-
-        const dest = path.join(uploadDir, folder);
-
-        // Create folder if it doesn't exist
-        if (!fs.existsSync(dest)) {
-            fs.mkdirSync(dest, { recursive: true });
-        }
-
-        cb(null, dest);
+        cb(null, getDestinationForField(file.fieldname));
     },
     filename: function (req, file, cb) {
-        // Generate unique filename: timestamp-randomstring-originalname
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        const basename = path.basename(file.originalname, ext);
-        cb(null, basename + '-' + uniqueSuffix + ext);
+        cb(null, buildStoredFilename(file));
     }
 });
 
 // File filter - only allow specific file types
 const fileFilter = (req, file, cb) => {
-    // Allowed extensions
-    const allowedTypes = /jpeg|jpg|png|pdf|doc|docx/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    const allowedExtensions = new Set(['.jpeg', '.jpg', '.png', '.pdf', '.doc', '.docx']);
+    const allowedMimeTypes = new Set([
+        'image/jpeg',
+        'image/png',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/octet-stream'
+    ]);
 
-    if (extname && mimetype) {
+    const extension = path.extname(file.originalname).toLowerCase();
+
+    if (allowedExtensions.has(extension) && allowedMimeTypes.has(file.mimetype)) {
         return cb(null, true);
-    } else {
-        cb(new Error('Only images (JPEG, PNG) and documents (PDF, DOC, DOCX) are allowed'));
     }
+
+    cb(new Error('Only images (JPEG, PNG) and documents (PDF, DOC, DOCX) are allowed'));
 };
 
 // Configure multer

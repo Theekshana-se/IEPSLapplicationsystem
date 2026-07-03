@@ -6,6 +6,7 @@ import {
     Users,
     UserCheck,
     BarChart3,
+    CreditCard,
     LogOut,
     Menu,
     X
@@ -25,6 +26,7 @@ export default function AdminLayout() {
         { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/admin/pending', icon: UserCheck, label: 'Pending Registrations' },
         { path: '/admin/members', icon: Users, label: 'All Members' },
+        { path: '/admin/payments', icon: CreditCard, label: 'Payments' },
         { path: '/admin/statistics', icon: BarChart3, label: 'Statistics' },
     ];
 

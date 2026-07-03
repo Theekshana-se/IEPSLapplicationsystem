@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getAllMembers, getMemberDetails } from '../../api/adminApi';
-import { Search, Eye, Filter, Download, Users as UsersIcon } from 'lucide-react';
-import { formatDate, getStatusColor } from '../../utils/helpers';
+import { getAllMembers, getMemberDetails, sendImportedMemberActivations, sendMemberActivation } from '../../api/adminApi';
+import { Search, Eye, Filter, Download, Users as UsersIcon, KeyRound, Send } from 'lucide-react';
+import { formatDate } from '../../utils/helpers';
+import DocumentPanel from '../../components/documents/DocumentPanel';
 
 export default function AllMembers() {
     const [members, setMembers] = useState([]);
@@ -10,6 +11,10 @@ export default function AllMembers() {
     const [statusFilter, setStatusFilter] = useState('');
     const [selectedMember, setSelectedMember] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [actionMessage, setActionMessage] = useState('');
+    const [actionError, setActionError] = useState('');
+    const [activationLoading, setActivationLoading] = useState(false);
+    const [activationLinks, setActivationLinks] = useState([]);
 
     useEffect(() => {
         loadMembers();
@@ -40,6 +45,49 @@ export default function AllMembers() {
         }
     };
 
+    const showActionResult = (message, isError = false) => {
+        if (isError) {
+            setActionError(message);
+            setActionMessage('');
+            setActivationLinks([]);
+            return;
+        }
+
+        setActionMessage(message);
+        setActionError('');
+    };
+
+    const handleSendActivation = async (memberId) => {
+        setActivationLoading(true);
+        try {
+            const response = await sendMemberActivation(memberId);
+            showActionResult(response.message || 'Activation link created.');
+            setActivationLinks(response.data?.activationUrl ? [{
+                email: response.data.email,
+                activationUrl: response.data.activationUrl,
+                emailSent: response.data.emailSent
+            }] : []);
+        } catch (error) {
+            showActionResult(error.message || 'Unable to create activation link.', true);
+        } finally {
+            setActivationLoading(false);
+        }
+    };
+
+    const handleSendImportedActivations = async () => {
+        setActivationLoading(true);
+        try {
+            const response = await sendImportedMemberActivations();
+            const { total, sent, failed, skippedFallbackEmails } = response.data;
+            showActionResult(`Activation links created for ${total} imported members. Sent: ${sent}. Failed: ${failed}. Skipped fallback emails: ${skippedFallbackEmails}.`);
+            setActivationLinks((response.data.results || []).filter((item) => !item.emailSent).slice(0, 20));
+        } catch (error) {
+            showActionResult(error.message || 'Unable to send imported member activation links.', true);
+        } finally {
+            setActivationLoading(false);
+        }
+    };
+
     const getStatusBadge = (status) => {
         const statusMap = {
             pending: 'badge-warning',
@@ -57,11 +105,50 @@ export default function AllMembers() {
                     <h2 className="text-3xl font-bold text-gray-900">All Members</h2>
                     <p className="text-gray-600 mt-1">View and manage all registered members</p>
                 </div>
-                <button className="btn btn-outline">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Data
-                </button>
+                <div className="flex flex-wrap gap-3 justify-end">
+                    <button
+                        type="button"
+                        onClick={handleSendImportedActivations}
+                        disabled={activationLoading}
+                        className="btn btn-primary"
+                    >
+                        <Send className="w-4 h-4 mr-2" />
+                        Activate Imported
+                    </button>
+                    <button className="btn btn-outline">
+                        <Download className="w-4 h-4 mr-2" />
+                        Export Data
+                    </button>
+                </div>
             </div>
+
+            {actionMessage && (
+                <div className="p-4 bg-success-light border border-success rounded-lg text-success-dark">
+                    {actionMessage}
+                </div>
+            )}
+
+            {actionError && (
+                <div className="p-4 bg-error-light border border-error rounded-lg text-error-dark">
+                    {actionError}
+                </div>
+            )}
+
+            {activationLinks.length > 0 && (
+                <div className="card">
+                    <div className="card-body">
+                        <h3 className="font-semibold text-gray-900 mb-3">Activation Links Needing Manual Delivery</h3>
+                        <div className="space-y-3">
+                            {activationLinks.map((item) => (
+                                <div key={item.activationUrl} className="rounded-lg border border-gray-200 p-3">
+                                    <p className="text-sm font-medium text-gray-900">{item.email}</p>
+                                    <p className="text-xs text-gray-600 break-all mt-1">{item.activationUrl}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -175,12 +262,25 @@ export default function AllMembers() {
                                             </td>
                                             <td className="table-cell">{formatDate(member.createdAt)}</td>
                                             <td className="table-cell">
-                                                <button
-                                                    onClick={() => viewDetails(member._id)}
-                                                    className="btn btn-ghost btn-sm"
-                                                >
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => viewDetails(member._id)}
+                                                        className="btn btn-ghost btn-sm"
+                                                        title="View details"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleSendActivation(member._id)}
+                                                        disabled={activationLoading}
+                                                        className="btn btn-ghost btn-sm"
+                                                        title="Send activation link"
+                                                    >
+                                                        <KeyRound className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -217,6 +317,18 @@ export default function AllMembers() {
                                 )}
                             </div>
 
+                            <div className="flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => handleSendActivation(selectedMember._id)}
+                                    disabled={activationLoading}
+                                    className="btn btn-primary"
+                                >
+                                    <KeyRound className="w-4 h-4 mr-2" />
+                                    Send Activation Link
+                                </button>
+                            </div>
+
                             {/* Personal Details */}
                             <div>
                                 <h4 className="text-lg font-semibold mb-3">Personal Details</h4>
@@ -251,6 +363,12 @@ export default function AllMembers() {
                                     <p className="text-sm text-gray-600">Certifications</p>
                                 </div>
                             </div>
+
+                            <DocumentPanel
+                                documents={selectedMember.documents}
+                                documentDetails={selectedMember.documentDetails}
+                                title="Stored Documents"
+                            />
                         </div>
                     </div>
                 </div>

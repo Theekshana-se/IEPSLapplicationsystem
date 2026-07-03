@@ -12,6 +12,15 @@ export const updateMemberProfile = async (data) => {
     return response.data;
 };
 
+export const updateMyDocuments = async (formData) => {
+    const response = await api.post('/member/documents', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+};
+
 // Get member notifications
 export const getNotifications = async () => {
     const response = await api.get('/member/notifications');
@@ -21,6 +30,11 @@ export const getNotifications = async () => {
 // Mark notification as read
 export const markNotificationRead = async (notificationId) => {
     const response = await api.put(`/member/notifications/${notificationId}/read`);
+    return response.data;
+};
+
+export const getMemberPayments = async () => {
+    const response = await api.get('/member/payments');
     return response.data;
 };
 

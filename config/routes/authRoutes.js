@@ -6,7 +6,10 @@ const {
     registerMember,
     login,
     getMe,
-    logout
+    logout,
+    forgotPassword,
+    validatePasswordResetToken,
+    resetPassword
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -30,9 +33,20 @@ const loginValidation = [
     body('userType').isIn(['member', 'admin']).withMessage('Valid user type is required')
 ];
 
+const forgotPasswordValidation = [
+    body('email').isEmail().withMessage('Valid email is required')
+];
+
+const resetPasswordValidation = [
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+];
+
 // Routes
 router.post('/register', registerValidation, validate, registerMember);
 router.post('/login', loginValidation, validate, login);
+router.post('/forgot-password', forgotPasswordValidation, validate, forgotPassword);
+router.get('/reset-password/:token', validatePasswordResetToken);
+router.post('/reset-password/:token', resetPasswordValidation, validate, resetPassword);
 router.get('/me', protect, getMe);
 router.post('/logout', protect, logout);
 

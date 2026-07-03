@@ -19,8 +19,11 @@ const notificationSchema = new mongoose.Schema({
             'application_rejected',
             'payment_received',
             'payment_verified',
+            'renewal_reminder',
+            'payment_pending',
             'profile_updated',
-            'document_uploaded'
+            'document_uploaded',
+            'account_activation'
         ],
         required: true
     },

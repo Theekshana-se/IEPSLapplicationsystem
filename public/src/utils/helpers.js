@@ -25,6 +25,29 @@ export function formatCurrency(amount, currency = 'LKR') {
     }).format(amount);
 }
 
+export function getApiBaseUrl() {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    return apiUrl.replace(/\/api\/?$/, '');
+}
+
+export function getAssetUrl(assetPath) {
+    if (!assetPath) return '';
+    if (/^https?:\/\//i.test(assetPath)) return assetPath;
+    return `${getApiBaseUrl()}${assetPath.startsWith('/') ? assetPath : `/${assetPath}`}`;
+}
+
+export function formatPaymentStatus(status) {
+    const statusMap = {
+        completed: 'Completed',
+        pending: 'Pending Verification',
+        due: 'Renewal Due',
+        failed: 'Failed',
+        refunded: 'Refunded'
+    };
+
+    return statusMap[status] || status;
+}
+
 // Validate Sri Lankan NIC
 export function validateNIC(nic) {
     if (!nic) return false;

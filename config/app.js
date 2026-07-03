@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const errorHandler = require("./middleware/errorMiddleware");
+const { contentRoot } = require("./utils/fileStorage");
 
 const app = express();
 
@@ -17,20 +18,19 @@ app.use(cors({
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
 
-        // Allowed static origins
+        const isLoopbackOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+        if (isLoopbackOrigin) {
+            return callback(null, true);
+        }
+
         const allowedOrigins = [
-            'http://localhost:5173',
-            'http://localhost:5174',
             process.env.FRONTEND_URL
         ].filter(Boolean);
 
-        // Check if origin matches allowed static origins
         if (allowedOrigins.indexOf(origin) !== -1) {
             return callback(null, true);
         }
 
-        // Check if origin is a vercel app (allow any subdomain)
-        // Matches: https://any-name.vercel.app
         if (/^https:\/\/.*\.vercel\.app$/.test(origin)) {
             return callback(null, true);
         }
@@ -59,13 +59,14 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded files statically
-app.use('/uploads', express.static('uploads'));
+app.use('/content', express.static(contentRoot));
+app.use('/uploads', express.static(contentRoot));
 
 // API Routes
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/registration", require("./routes/registrationRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/member", require("./routes/memberPortalRoutes"));
 app.use("/api/members", require("./routes/memberRoutes"));
 
 // Health check route

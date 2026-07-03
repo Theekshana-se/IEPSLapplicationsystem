@@ -1,6 +1,8 @@
 const Member = require("../models/Member");
+const Notification = require("../models/Notification");
 const asyncHandler = require("../middleware/asyncHandler");
 const ApiError = require("../utils/ApiError");
+const { serializeMember, serializeMembers } = require("../utils/serializeMember");
 
 exports.createMember = asyncHandler(async (req, res) => {
   const member = await Member.create(req.body);
@@ -15,7 +17,7 @@ exports.getAllMembers = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     count: members.length,
-    data: members,
+    data: serializeMembers(members),
   });
 });
 
@@ -28,7 +30,7 @@ exports.getMemberById = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    data: member,
+    data: serializeMember(member),
   });
 });
 

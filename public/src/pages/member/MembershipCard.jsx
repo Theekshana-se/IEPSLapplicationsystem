@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getMemberProfile } from '../../api/memberApi';
-import { Download, CreditCard } from 'lucide-react';
+import { Download, CreditCard, User } from 'lucide-react';
+import { getAssetUrl } from '../../utils/helpers';
 
 export default function MembershipCard() {
     const [profile, setProfile] = useState(null);
@@ -80,9 +81,27 @@ export default function MembershipCard() {
 
                         {/* Member Info */}
                         <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-20 h-20 rounded-xl overflow-hidden bg-white/15 border border-white/20 flex items-center justify-center">
+                                    {profile.documents?.profilePhoto ? (
+                                        <img
+                                            src={getAssetUrl(profile.documents.profilePhoto)}
+                                            alt="Profile"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <User className="w-10 h-10 text-white" />
+                                    )}
+                                </div>
+                                <div>
+                                    <p className="text-xs text-primary-100 uppercase tracking-wide mb-1">Member Name</p>
+                                    <p className="text-2xl font-bold">{profile.personalDetails?.fullName}</p>
+                                </div>
+                            </div>
+
                             <div>
-                                <p className="text-xs text-primary-100 uppercase tracking-wide mb-1">Member Name</p>
-                                <p className="text-2xl font-bold">{profile.personalDetails?.fullName}</p>
+                                <p className="text-xs text-primary-100 uppercase tracking-wide mb-1">Contact Email</p>
+                                <p className="text-lg">{profile.personalDetails?.personalEmail}</p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">

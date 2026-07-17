@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { logout } from '../../api/authApi';
 import {
     LayoutDashboard,
@@ -9,12 +9,14 @@ import {
     CreditCard,
     LogOut,
     Menu,
-    X
+    X,
+    Tags,
+    ClipboardCheck,
+    UserPlus
 } from 'lucide-react';
 import logo from '../../assets/IEPSL.png';
 
 export default function AdminLayout() {
-    const navigate = useNavigate();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -22,13 +24,21 @@ export default function AdminLayout() {
         await logout();
     };
 
-    const menuItems = [
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const standardMenuItems = [
         { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/admin/pending', icon: UserCheck, label: 'Pending Registrations' },
         { path: '/admin/members', icon: Users, label: 'All Members' },
         { path: '/admin/payments', icon: CreditCard, label: 'Payments' },
+        ...(user.role === 'admin' ? [
+            { path: '/admin/categories', icon: Tags, label: 'Member Categories' },
+            { path: '/admin/profile-updates', icon: ClipboardCheck, label: 'Profile Updates' }
+        ] : []),
         { path: '/admin/statistics', icon: BarChart3, label: 'Statistics' },
     ];
+    const menuItems = user.role === 'super_admin'
+        ? [{ path: '/admin/administrators', icon: UserPlus, label: 'Administrators' }]
+        : standardMenuItems;
 
     const isActive = (path) => location.pathname === path;
 
@@ -47,7 +57,7 @@ export default function AdminLayout() {
                         <div className="flex items-center gap-3">
                             <img src={logo} alt="IEPSL Logo" className="h-10 w-auto" />
                             <div>
-                                <h1 className="text-xl font-bold text-primary-600">IEPSL Admin Portal</h1>
+                                <h1 className="text-xl font-bold text-primary-600">{user.role === 'super_admin' ? 'IEPSL Account Provisioning' : 'IEPSL Admin Portal'}</h1>
                                 <p className="text-xs text-gray-600">Institute of Environmental Professionals</p>
                             </div>
                         </div>

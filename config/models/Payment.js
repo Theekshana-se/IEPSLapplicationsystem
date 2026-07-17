@@ -56,6 +56,15 @@ const paymentSchema = new mongoose.Schema({
     },
 
     paidAt: Date,
+    source: {
+        type: String,
+        enum: ['member', 'admin', 'legacy'],
+        default: 'admin'
+    },
+    submittedByMember: {
+        type: Boolean,
+        default: false
+    },
     recordedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin'

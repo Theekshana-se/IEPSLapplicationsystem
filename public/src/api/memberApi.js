@@ -38,6 +38,23 @@ export const getMemberPayments = async () => {
     return response.data;
 };
 
+export const submitMemberPayment = async (formData) => {
+    const response = await api.post('/member/payments', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+};
+
+export const getMyProfileUpdateRequests = async () => {
+    const response = await api.get('/member/profile-update-requests');
+    return response.data;
+};
+
+export const submitProfileUpdateRequest = async (data) => {
+    const response = await api.post('/member/profile-update-requests', data);
+    return response.data;
+};
+
 // Search member for reference
 export const searchMemberForReference = async (query) => {
     const response = await api.get(`/members/search/reference?query=${query}`);

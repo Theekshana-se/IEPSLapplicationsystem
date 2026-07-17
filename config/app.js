@@ -59,8 +59,15 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/content', express.static(contentRoot));
-app.use('/uploads', express.static(contentRoot));
+const mediaStaticOptions = {
+    setHeaders: (res) => {
+        // The frontend and API are deployed on separate origins.
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    }
+};
+
+app.use('/content', express.static(contentRoot, mediaStaticOptions));
+app.use('/uploads', express.static(contentRoot, mediaStaticOptions));
 
 // API Routes
 app.use("/api/auth", require("./routes/authRoutes"));

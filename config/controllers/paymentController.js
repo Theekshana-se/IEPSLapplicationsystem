@@ -174,6 +174,66 @@ exports.recordPayment = async (req, res, next) => {
   }
 };
 
+exports.recordMyPayment = async (req, res, next) => {
+  try {
+    if (req.userType !== "member") {
+      return res.status(403).json({ success: false, message: "Only members can submit payments." });
+    }
+
+    const amount = Number(req.body.amount);
+    const paymentYear = Number(req.body.paymentYear) || new Date().getFullYear();
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ success: false, message: "Enter a valid payment amount." });
+    }
+    if (paymentYear < 2000 || paymentYear > 2100) {
+      return res.status(400).json({ success: false, message: "Enter a valid payment year." });
+    }
+
+    const paymentProof = req.file ? await createStoredFileRecord(req.file) : null;
+    const payment = await Payment.create({
+      memberId: req.user._id,
+      membershipId: req.user.membershipId || "PENDING",
+      paymentType: req.body.paymentType || "annual",
+      amount,
+      paymentYear,
+      dueDate: new Date(`${paymentYear}-12-31T00:00:00.000Z`),
+      currency: "LKR",
+      paymentMethod: req.body.paymentMethod || "bank_transfer",
+      paymentStatus: "pending",
+      transactionId: req.body.transactionId || "",
+      receiptNumber: req.body.receiptNumber || "",
+      paymentProof: paymentProof?.path || "",
+      paymentProofDetails: paymentProof || undefined,
+      paidAt: req.body.paidAt ? new Date(req.body.paidAt) : new Date(),
+      source: "member",
+      submittedByMember: true,
+      notes: req.body.notes || ""
+    });
+
+    await Promise.all([
+      Notification.create({
+        recipientId: req.user._id,
+        recipientType: "member",
+        type: "payment_received",
+        title: "Payment Submitted",
+        message: `Your LKR ${amount} payment was submitted and is awaiting admin verification.`,
+        metadata: { paymentId: payment._id, paymentYear }
+      }),
+      Notification.create({
+        recipientType: "admin",
+        type: "payment_pending",
+        title: "Payment Awaiting Verification",
+        message: `${req.user.personalDetails.nameWithInitials} submitted an LKR ${amount} payment for ${paymentYear}.`,
+        metadata: { paymentId: payment._id, memberId: req.user._id, paymentYear }
+      })
+    ]);
+
+    res.status(201).json({ success: true, message: "Payment submitted for verification.", data: serializePayment(payment) });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.verifyPayment = async (req, res, next) => {
   try {
     const payment = await Payment.findById(req.params.paymentId);

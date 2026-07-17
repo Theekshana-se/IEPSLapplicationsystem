@@ -2,13 +2,20 @@ const nodemailer = require('nodemailer');
 
 // Create reusable transporter
 const createTransporter = () => {
-    if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-        throw new Error('Email service is not configured. Set EMAIL_HOST, EMAIL_USER, and EMAIL_PASSWORD.');
+    const isPlaceholder =
+        !process.env.EMAIL_HOST ||
+        !process.env.EMAIL_USER ||
+        !process.env.EMAIL_PASSWORD ||
+        process.env.EMAIL_USER === 'your-email@gmail.com' ||
+        process.env.EMAIL_PASSWORD === 'your-app-password';
+
+    if (isPlaceholder) {
+        throw new Error('Email service is not configured. Replace the placeholder EMAIL_USER and EMAIL_PASSWORD values.');
     }
 
     return nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
+        port: Number(process.env.EMAIL_PORT) || 587,
         secure: String(process.env.EMAIL_PORT) === '465',
         auth: {
             user: process.env.EMAIL_USER,
@@ -23,7 +30,7 @@ const sendEmail = async (options) => {
         const transporter = createTransporter();
 
         const mailOptions = {
-            from: `IEPSL <${process.env.EMAIL_USER}>`,
+            from: `${process.env.EMAIL_FROM_NAME || 'IEPSL'} <${process.env.EMAIL_USER}>`,
             to: options.to,
             subject: options.subject,
             text: options.text,
@@ -214,3 +221,9 @@ exports.sendPasswordResetEmail = async (to, memberName, resetUrl) => {
 };
 
 exports.sendEmail = sendEmail;
+
+exports.verifyEmailConnection = async () => {
+    const transporter = createTransporter();
+    await transporter.verify();
+    return true;
+};

@@ -260,6 +260,7 @@ function buildMemberPayload(row, context) {
     membershipId,
     status: "active",
     personalDetails: {
+      prefix: cleanString(row["Prefix"]),
       nameWithInitials: cleanString(row["Name with Initials "]) || cleanString(row["Full Name"]),
       fullName: cleanString(row["Full Name"]),
       dateOfBirth: parseDate(row["Date of birth"]) || historicalDate,

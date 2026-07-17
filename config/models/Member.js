@@ -28,6 +28,7 @@ const memberSchema = new mongoose.Schema({
 
   // Personal Details (Step 1)
   personalDetails: {
+    prefix: { type: String, trim: true },
     nameWithInitials: { type: String, required: true },
     fullName: { type: String, required: true },
     dateOfBirth: { type: Date, required: true },
@@ -158,6 +159,11 @@ const memberSchema = new mongoose.Schema({
   },
   reviewedAt: Date,
   reviewNotes: String,
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MemberCategory',
+    default: null
+  },
 
   // Legacy spreadsheet imports that do not map cleanly to the current flow
   legacyImport: {

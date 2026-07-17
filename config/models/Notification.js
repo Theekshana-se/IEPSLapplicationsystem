@@ -22,6 +22,9 @@ const notificationSchema = new mongoose.Schema({
             'renewal_reminder',
             'payment_pending',
             'profile_updated',
+            'profile_update_requested',
+            'profile_update_approved',
+            'profile_update_rejected',
             'document_uploaded',
             'account_activation'
         ],

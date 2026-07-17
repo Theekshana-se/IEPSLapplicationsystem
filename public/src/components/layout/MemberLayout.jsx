@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { logout } from '../../api/authApi';
 import {
     LayoutDashboard,
@@ -9,12 +9,13 @@ import {
     Bell,
     LogOut,
     Menu,
-    X
+    X,
+    WalletCards,
+    Pencil
 } from 'lucide-react';
 import logo from '../../assets/IEPSL.png';
 
 export default function MemberLayout() {
-    const navigate = useNavigate();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -25,6 +26,8 @@ export default function MemberLayout() {
     const menuItems = [
         { path: '/member/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/member/profile', icon: User, label: 'My Profile' },
+        { path: '/member/update-details', icon: Pencil, label: 'Update Details' },
+        { path: '/member/payments', icon: WalletCards, label: 'My Payments' },
         { path: '/member/registration-details', icon: FileText, label: 'Registration Details' },
         { path: '/member/membership-card', icon: CreditCard, label: 'Membership Card' },
         { path: '/member/notifications', icon: Bell, label: 'Notifications' },

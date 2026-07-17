@@ -145,7 +145,7 @@ export default function MemberProfile() {
 
                             <div className="mt-4">
                                 <span className={`badge badge-${profile?.status === 'pending' ? 'warning' : 'success'} text-sm px-4 py-2`}>
-                                    {profile?.status?.toUpperCase()}
+                                    {(profile?.status === 'approved' ? 'active' : profile?.status)?.toUpperCase()}
                                 </span>
                                 {profile?.membershipId && (
                                     <span className="ml-3 text-sm text-gray-600">

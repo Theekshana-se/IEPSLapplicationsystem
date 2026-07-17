@@ -1,7 +1,7 @@
 const Notification = require("../models/Notification");
 const Payment = require("../models/Payment");
 const Member = require("../models/Member");
-const { createStoredFileRecord } = require("../utils/fileStorage");
+const { createStoredFileRecord, normalizeStoredPath } = require("../utils/fileStorage");
 const { serializeMember } = require("../utils/serializeMember");
 const { summarizeMemberPayments } = require("../utils/paymentTracking");
 
@@ -161,7 +161,12 @@ exports.getMyPayments = async (req, res, next) => {
       success: true,
       data: {
         summary: paymentSummary,
-        payments,
+        payments: payments.map((payment) => {
+          const plain = payment.toObject();
+          if (plain.paymentProof) plain.paymentProof = normalizeStoredPath(plain.paymentProof);
+          if (plain.paymentProofDetails?.path) plain.paymentProofDetails.path = normalizeStoredPath(plain.paymentProofDetails.path);
+          return plain;
+        }),
       },
     });
   } catch (error) {

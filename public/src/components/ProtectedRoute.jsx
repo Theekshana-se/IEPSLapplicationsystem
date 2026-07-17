@@ -11,6 +11,22 @@ export const ProtectedRoute = ({ children }) => {
     return children;
 };
 
+export const RoleRoute = ({ children, roles }) => {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) return <Navigate to="/login" replace />;
+
+    try {
+        const user = JSON.parse(userStr);
+        if (user.userType !== 'admin' || !roles.includes(user.role)) {
+            return <Navigate to={user.role === 'super_admin' ? '/admin/administrators' : '/admin/dashboard'} replace />;
+        }
+        return children;
+    } catch {
+        return <Navigate to="/login" replace />;
+    }
+};
+
 // Public Route Component - Redirects if already authenticated
 export const PublicRoute = ({ children }) => {
     const token = localStorage.getItem('token');
@@ -31,7 +47,7 @@ export const PublicRoute = ({ children }) => {
 
             // Redirect based on user type
             if (user.userType === 'admin') {
-                return <Navigate to="/admin/dashboard" replace />;
+                return <Navigate to={user.role === 'super_admin' ? '/admin/administrators' : '/admin/dashboard'} replace />;
             } else if (user.userType === 'member') {
                 // Check if registration is complete
                 const currentStep = user.currentStep || 0;

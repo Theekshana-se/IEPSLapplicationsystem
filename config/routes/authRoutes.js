@@ -15,6 +15,7 @@ const { protect } = require('../middleware/authMiddleware');
 
 // Validation rules
 const registerValidation = [
+    body('prefix').notEmpty().withMessage('Name prefix is required'),
     body('nameWithInitials').notEmpty().withMessage('Name with initials is required'),
     body('fullName').notEmpty().withMessage('Full name is required'),
     body('dateOfBirth').isISO8601().withMessage('Valid date of birth is required'),

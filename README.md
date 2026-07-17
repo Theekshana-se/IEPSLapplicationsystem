@@ -215,6 +215,12 @@ This project is proprietary software for IEPSL.
 
 For support, email support@iepsl.lk
 
+## Legacy Payment History
+
+Spreadsheet payment columns are preserved under `member.legacyImport.paymentHistory` and are shown in the admin member-details view. They are intentionally excluded from totals, renewal status, and verified payment reports because the source cells do not consistently provide a normalized payment year, amount, method, and verification evidence.
+
+For migration, an administrator should validate each legacy entry against receipts or bank records, then create a normalized `Payment` record with `source: "legacy"`, the confirmed year and amount, and `paymentStatus: "completed"`. Keep the original `legacyImport.paymentHistory` value for audit traceability.
+
 ---
 
 **Built with ❤️ for IEPSL**

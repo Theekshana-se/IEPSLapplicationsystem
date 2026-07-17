@@ -63,6 +63,10 @@ export default function Step1Summary({ onComplete }) {
                 <div className="card-body">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         <div className="border-b pb-4">
+                            <h3 className="text-sm font-medium text-gray-500 mb-1">Name Prefix</h3>
+                            <p className="font-medium text-gray-900">{memberData.prefix || 'N/A'}</p>
+                        </div>
+                        <div className="border-b pb-4">
                             <h3 className="text-sm font-medium text-gray-500 mb-1">Name with Initials</h3>
                             <p className="font-medium text-gray-900">{memberData.nameWithInitials}</p>
                         </div>

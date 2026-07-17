@@ -5,11 +5,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { registerMember } from '../api/authApi';
-import { DISTRICTS, GENDERS } from '../utils/constants';
+import { DISTRICTS, GENDERS, NAME_PREFIXES } from '../utils/constants';
 import { validateNIC, validateMobile } from '../utils/helpers';
 
 // Validation schema for Step 1
 const step1Schema = z.object({
+    prefix: z.string().min(1, 'Name prefix is required'),
     nameWithInitials: z.string().min(1, 'Name with initials is required'),
     fullName: z.string().min(1, 'Full name is required'),
     dateOfBirth: z.string().min(1, 'Date of birth is required'),
@@ -100,6 +101,22 @@ export default function RegisterPage() {
                         )}
 
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                            <div className="max-w-xs">
+                                <label className="label">
+                                    Name Prefix <span className="text-error">*</span>
+                                </label>
+                                <select
+                                    {...register('prefix')}
+                                    className={`input ${errors.prefix ? 'input-error' : ''}`}
+                                >
+                                    <option value="">Select prefix</option>
+                                    {NAME_PREFIXES.map((prefix) => (
+                                        <option key={prefix} value={prefix}>{prefix}</option>
+                                    ))}
+                                </select>
+                                {errors.prefix && <p className="error-message">{errors.prefix.message}</p>}
+                            </div>
+
                             {/* Name Fields */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>

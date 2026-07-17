@@ -80,3 +80,48 @@ export const sendRenewalReminders = async (year) => {
     const response = await api.post('/admin/payments/send-renewal-reminders', { year });
     return response.data;
 };
+
+export const getMemberCategories = async () => {
+    const response = await api.get('/admin/member-categories');
+    return response.data;
+};
+
+export const createMemberCategory = async (data) => {
+    const response = await api.post('/admin/member-categories', data);
+    return response.data;
+};
+
+export const updateMemberCategory = async (categoryId, data) => {
+    const response = await api.patch(`/admin/member-categories/${categoryId}`, data);
+    return response.data;
+};
+
+export const deleteMemberCategory = async (categoryId) => {
+    const response = await api.delete(`/admin/member-categories/${categoryId}`);
+    return response.data;
+};
+
+export const assignMemberCategory = async (memberId, categoryId) => {
+    const response = await api.patch(`/admin/members/${memberId}/category`, { categoryId });
+    return response.data;
+};
+
+export const getProfileUpdateRequests = async (status = '') => {
+    const response = await api.get('/admin/profile-update-requests', { params: { status } });
+    return response.data;
+};
+
+export const reviewProfileUpdateRequest = async (requestId, decision, notes = '') => {
+    const response = await api.patch(`/admin/profile-update-requests/${requestId}`, { decision, notes });
+    return response.data;
+};
+
+export const getAdministrators = async () => {
+    const response = await api.get('/admin/administrators');
+    return response.data;
+};
+
+export const createAdministrator = async (data) => {
+    const response = await api.post('/admin/administrators', data);
+    return response.data;
+};

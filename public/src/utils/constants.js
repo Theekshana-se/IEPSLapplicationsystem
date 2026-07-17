@@ -34,6 +34,13 @@ export const GENDERS = [
     { value: 'other', label: 'Other' }
 ];
 
+export const NAME_PREFIXES = [
+    'Mr.', 'Mrs.', 'Ms.', 'Miss', 'Mx.', 'Dr.', 'Prof.', 'Assoc. Prof.',
+    'Rev.', 'Ven.', 'Fr.', 'Sr.', 'Eng.', 'Ar.', 'Hon.', 'Justice',
+    'Sir', 'Dame', 'Capt.', 'Major', 'Lt. Col.', 'Col.', 'Brig.',
+    'Rear Adm.', 'Other'
+];
+
 // Communication methods
 export const COMMUNICATION_METHODS = [
     { value: 'email', label: 'Email' },

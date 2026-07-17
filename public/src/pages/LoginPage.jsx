@@ -44,7 +44,7 @@ export default function LoginPage() {
 
                 // Redirect based on user type and status
                 if (user.userType === 'admin') {
-                    navigate('/admin/dashboard');
+                    navigate(user.role === 'super_admin' ? '/admin/administrators' : '/admin/dashboard');
                 } else if (user.userType === 'member') {
                     // For members, check registration progress
                     if (user.currentStep && user.currentStep < 8) {

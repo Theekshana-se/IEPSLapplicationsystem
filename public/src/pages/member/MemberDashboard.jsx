@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getMemberProfile, getMemberPayments, getNotifications } from '../../api/memberApi';
 import { getRegistrationProgress } from '../../api/registrationApi';
 import { User, Mail, Phone, MapPin, CheckCircle, Clock, AlertCircle, CreditCard } from 'lucide-react';
-import { formatDate, formatPaymentStatus } from '../../utils/helpers';
+import { formatDate, formatPaymentStatus, getAssetUrl } from '../../utils/helpers';
 
 export default function MemberDashboard() {
     const [profile, setProfile] = useState(null);
@@ -46,7 +46,7 @@ export default function MemberDashboard() {
     const getStatusInfo = (status) => {
         const statusMap = {
             pending: { icon: Clock, text: 'Under Review', color: 'warning' },
-            approved: { icon: CheckCircle, text: 'Approved', color: 'success' },
+            approved: { icon: CheckCircle, text: 'Active', color: 'success' },
             rejected: { icon: AlertCircle, text: 'Rejected', color: 'error' },
             active: { icon: CheckCircle, text: 'Active', color: 'success' }
         };
@@ -68,8 +68,14 @@ export default function MemberDashboard() {
             {/* Status Card */}
             <div className="card">
                 <div className="card-body">
-                    <div className="flex items-center justify-between">
-                        <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                        <div className="flex items-center gap-4 min-w-0">
+                            <div className="w-20 h-20 rounded-full overflow-hidden bg-primary-100 border-2 border-primary-200 flex items-center justify-center shrink-0">
+                                {profile?.documents?.profilePhoto ? (
+                                    <img src={getAssetUrl(profile.documents.profilePhoto)} alt="Profile" className="w-full h-full object-cover" />
+                                ) : <User className="w-9 h-9 text-primary-600" />}
+                            </div>
+                            <div className="min-w-0">
                             <h3 className="text-lg font-semibold mb-2">Membership Status</h3>
                             <div className="flex items-center gap-2">
                                 <StatusIcon className={`w-5 h-5 text-${statusInfo.color}`} />
@@ -82,6 +88,7 @@ export default function MemberDashboard() {
                                     Membership ID: <span className="font-mono font-semibold">{profile.membershipId}</span>
                                 </p>
                             )}
+                            </div>
                         </div>
                         {profile?.status === 'pending' && (
                             <div className="text-right">
@@ -125,9 +132,9 @@ export default function MemberDashboard() {
                             <div className="p-3 bg-primary-100 text-primary-600 rounded-lg">
                                 <User className="w-6 h-6" />
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <p className="text-sm text-gray-600">Full Name</p>
-                                <p className="font-semibold">{profile?.personalDetails?.fullName || 'N/A'}</p>
+                                <p className="font-semibold break-words">{profile?.personalDetails?.fullName || 'N/A'}</p>
                             </div>
                         </div>
                     </div>
@@ -139,9 +146,9 @@ export default function MemberDashboard() {
                             <div className="p-3 bg-success-100 text-success-600 rounded-lg">
                                 <Mail className="w-6 h-6" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1">
                                 <p className="text-sm text-gray-600">Email</p>
-                                <p className="font-semibold text-sm">{profile?.personalDetails?.personalEmail || 'N/A'}</p>
+                                <p className="font-semibold text-sm break-all">{profile?.personalDetails?.personalEmail || 'N/A'}</p>
                             </div>
                         </div>
                     </div>

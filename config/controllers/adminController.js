@@ -54,6 +54,7 @@ exports.getPendingRegistrations = async (req, res, next) => {
 
         const total = await Member.countDocuments(query);
         const members = await Member.find(query)
+            .populate('category', 'name description isActive')
             .sort({ submittedAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit)
@@ -104,7 +105,8 @@ exports.getAllMembers = async (req, res, next) => {
             .sort({ createdAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit)
-            .select('personalDetails membershipId status createdAt registrationProgress');
+            .select('personalDetails membershipId status category createdAt registrationProgress')
+            .populate('category', 'name description isActive');
 
         res.status(200).json({
             success: true,
@@ -150,7 +152,7 @@ exports.getMemberDetails = async (req, res, next) => {
 // @access  Private (Admin - admin, super_admin)
 exports.sendMemberActivation = async (req, res, next) => {
     try {
-        const member = await Member.findById(req.params.id);
+        const member = await Member.findById(req.params.id).populate('category', 'name description isActive');
 
         if (!member) {
             return res.status(404).json({
@@ -304,7 +306,7 @@ exports.approveMember = async (req, res, next) => {
         const membershipId = await generateMembershipId();
 
         // Update member
-        member.status = 'approved';
+        member.status = 'active';
         member.membershipId = membershipId;
         member.reviewedBy = req.user._id;
         member.reviewedAt = new Date();

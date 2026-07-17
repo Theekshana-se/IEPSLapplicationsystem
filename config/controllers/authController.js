@@ -30,6 +30,7 @@ function createPasswordResetToken(member) {
 exports.registerMember = async (req, res, next) => {
     try {
         const {
+            prefix,
             nameWithInitials,
             fullName,
             dateOfBirth,
@@ -65,6 +66,7 @@ exports.registerMember = async (req, res, next) => {
         // Create new member
         const member = await Member.create({
             personalDetails: {
+                prefix,
                 nameWithInitials,
                 fullName,
                 dateOfBirth,

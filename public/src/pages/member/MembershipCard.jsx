@@ -38,7 +38,7 @@ export default function MembershipCard() {
                 <CreditCard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">Membership Card Not Available</h3>
                 <p className="text-gray-600">
-                    Your membership card will be available once your application is approved.
+                    Your membership card will be available once your application is active.
                 </p>
             </div>
         );
@@ -93,15 +93,15 @@ export default function MembershipCard() {
                                         <User className="w-10 h-10 text-white" />
                                     )}
                                 </div>
-                                <div>
+                                <div className="min-w-0 flex-1">
                                     <p className="text-xs text-primary-100 uppercase tracking-wide mb-1">Member Name</p>
-                                    <p className="text-2xl font-bold">{profile.personalDetails?.fullName}</p>
+                                    <p className="text-2xl font-bold break-words">{profile.personalDetails?.fullName}</p>
                                 </div>
                             </div>
 
                             <div>
                                 <p className="text-xs text-primary-100 uppercase tracking-wide mb-1">Contact Email</p>
-                                <p className="text-lg">{profile.personalDetails?.personalEmail}</p>
+                                <p className="text-lg break-all">{profile.personalDetails?.personalEmail}</p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -111,7 +111,7 @@ export default function MembershipCard() {
                                 </div>
                                 <div>
                                     <p className="text-xs text-primary-100 uppercase tracking-wide mb-1">Status</p>
-                                    <p className="text-lg font-semibold capitalize">{profile.status}</p>
+                                    <p className="text-lg font-semibold capitalize">{profile.status === 'approved' ? 'active' : profile.status}</p>
                                 </div>
                             </div>
 

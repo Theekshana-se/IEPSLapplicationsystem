@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { getAllMembers, getMemberDetails, sendImportedMemberActivations, sendMemberActivation } from '../../api/adminApi';
+import { assignMemberCategory, getAllMembers, getMemberCategories, getMemberDetails, sendImportedMemberActivations, sendMemberActivation } from '../../api/adminApi';
 import { Search, Eye, Filter, Download, Users as UsersIcon, KeyRound, Send } from 'lucide-react';
 import { formatDate } from '../../utils/helpers';
 import DocumentPanel from '../../components/documents/DocumentPanel';
 
 export default function AllMembers() {
     const [members, setMembers] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
@@ -19,6 +20,10 @@ export default function AllMembers() {
     useEffect(() => {
         loadMembers();
     }, [search, statusFilter]);
+
+    useEffect(() => {
+        getMemberCategories().then((response) => response.success && setCategories(response.data)).catch(() => {});
+    }, []);
 
     const loadMembers = async () => {
         try {
@@ -96,6 +101,15 @@ export default function AllMembers() {
             rejected: 'badge-error'
         };
         return statusMap[status] || 'badge-secondary';
+    };
+
+    const handleCategoryChange = async (memberId, categoryId) => {
+        try {
+            await assignMemberCategory(memberId, categoryId);
+            await loadMembers();
+        } catch (error) {
+            showActionResult(error.message || 'Unable to assign member category.', true);
+        }
     };
 
     return (
@@ -207,7 +221,6 @@ export default function AllMembers() {
                             >
                                 <option value="">All Status</option>
                                 <option value="pending">Pending</option>
-                                <option value="approved">Approved</option>
                                 <option value="active">Active</option>
                                 <option value="rejected">Rejected</option>
                             </select>
@@ -238,6 +251,7 @@ export default function AllMembers() {
                                         <th className="table-header-cell">Email</th>
                                         <th className="table-header-cell">District</th>
                                         <th className="table-header-cell">Status</th>
+                                        <th className="table-header-cell">Category</th>
                                         <th className="table-header-cell">Joined</th>
                                         <th className="table-header-cell">Actions</th>
                                     </tr>
@@ -251,14 +265,20 @@ export default function AllMembers() {
                                             <td className="table-cell font-medium">
                                                 {member.personalDetails?.nameWithInitials}
                                             </td>
-                                            <td className="table-cell text-gray-600">
+                                            <td className="table-cell text-gray-600 max-w-[240px] break-all">
                                                 {member.personalDetails?.personalEmail}
                                             </td>
                                             <td className="table-cell">{member.personalDetails?.district}</td>
                                             <td className="table-cell">
                                                 <span className={`badge ${getStatusBadge(member.status)}`}>
-                                                    {member.status}
+                                                    {member.status === 'approved' ? 'active' : member.status}
                                                 </span>
+                                            </td>
+                                            <td className="table-cell">
+                                                <select className="input min-w-[150px] py-2" value={member.category?._id || ''} onChange={(event) => handleCategoryChange(member._id, event.target.value)}>
+                                                    <option value="">Unassigned</option>
+                                                    {categories.filter((category) => category.isActive).map((category) => <option key={category._id} value={category._id}>{category.name}</option>)}
+                                                </select>
                                             </td>
                                             <td className="table-cell">{formatDate(member.createdAt)}</td>
                                             <td className="table-cell">
@@ -307,7 +327,7 @@ export default function AllMembers() {
                             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                 <div>
                                     <p className="text-sm text-gray-600">Membership Status</p>
-                                    <p className="text-lg font-semibold capitalize">{selectedMember.status}</p>
+                                    <p className="text-lg font-semibold capitalize">{selectedMember.status === 'approved' ? 'active' : selectedMember.status}</p>
                                 </div>
                                 {selectedMember.membershipId && (
                                     <div className="text-right">
@@ -335,7 +355,7 @@ export default function AllMembers() {
                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div><span className="font-medium">Full Name:</span> {selectedMember.personalDetails?.fullName}</div>
                                     <div><span className="font-medium">NIC:</span> {selectedMember.personalDetails?.nicNumber}</div>
-                                    <div><span className="font-medium">Email:</span> {selectedMember.personalDetails?.personalEmail}</div>
+                                    <div className="min-w-0 break-all"><span className="font-medium">Email:</span> {selectedMember.personalDetails?.personalEmail}</div>
                                     <div><span className="font-medium">Mobile:</span> {selectedMember.personalDetails?.mobileNumber}</div>
                                     <div><span className="font-medium">District:</span> {selectedMember.personalDetails?.district}</div>
                                     <div><span className="font-medium">Gender:</span> {selectedMember.personalDetails?.gender}</div>
@@ -369,6 +389,20 @@ export default function AllMembers() {
                                 documentDetails={selectedMember.documentDetails}
                                 title="Stored Documents"
                             />
+
+                            {selectedMember.legacyImport?.paymentHistory && Object.keys(selectedMember.legacyImport.paymentHistory).length > 0 && (
+                                <div>
+                                    <h4 className="text-lg font-semibold mb-3">Legacy Payment History</h4>
+                                    <p className="text-sm text-gray-500 mb-3">Preserved exactly from the client spreadsheet. These notes are not counted as verified ledger payments until an administrator confirms the year and amount.</p>
+                                    <div className="space-y-2">
+                                        {Object.entries(selectedMember.legacyImport.paymentHistory).map(([period, value]) => (
+                                            <div key={period} className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-2 rounded-lg bg-gray-50 p-3 text-sm">
+                                                <span className="font-medium">{period}</span><span className="break-words">{String(value)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
